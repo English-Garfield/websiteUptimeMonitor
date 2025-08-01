@@ -1,8 +1,14 @@
-import logging as lg
-import sqlite3
-import json
-import time
 import requests
+import sqlite3
+import smtplib
+import time
+import json
+
+from datetime import datetime, timedelta
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+import threading
+import logging as lg
 
 # Configure logging
 lg.basicConfig(
@@ -13,6 +19,7 @@ lg.basicConfig(
         lg.StreamHandler()
     ]
 )
+
 
 class UptimeMonitor:
     def __init__(self, dbName='uptimeMonitor.db'):
@@ -150,6 +157,57 @@ class UptimeMonitor:
             }
 
     def log_check_result(self, website_id, status_code, response_time, is_up, error_message):
+        connection = sqlite3.connect(self.db.name)
+        cursor = connection.cursor()
+
+        cursor.execute('''
+                       INSERT INTO uptime_checks (website_id, status_code, response_time, is_up, error_message)
+                       VALUES (?, ?, ?, ?, ?)
+                       ''', (website_id, status_code, response_time, is_up, error_message))
+
+        connection.commit()
+        connection.close()
+
+    def send_alert_email(self, website_name, website_url, error_message):
+        """Send email alert for website downtime"""
+        try:
+            email_config = self.config['email']
+
+            msg = MIMEMultipart()
+            msg['From'] = email_config['from_email']
+            msg['To'] = ', '.join(email_config['to_emails'])
+            msg['Subject'] = f"🚨 DOWNTIME ALERT: {website_name}"
+
+            body = f"""
+            Website Downtime Alert
+
+            Website: {website_name}
+            URL: {website_url}
+            Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+            Error: {error_message}
+
+            Please check the website immediately.
+
+            ---
+            Sent by Uptime Monitor
+            """
+
+            msg.attach(MIMEText(body, 'plain'))
+
+            server = smtplib.SMTP(email_config['smtp_server'], email_config['smtp_port'])
+            server.starttls()
+            server.login(email_config['username'], email_config['password'])
+
+            text = msg.as_string()
+            server.sendmail(email_config['from_email'], email_config['to_emails'], text)
+            server.quit()
+
+            lg.info(f"Alert email sent for {website_name}")
+            return True
+
+        except Exception as e:
+            lg.error(f"Failed to send email alert: {e}")
+            return False
 
 
 
