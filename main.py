@@ -1,5 +1,6 @@
 import logging as lg
 import sqlite3
+import json
 
 # Configure logging
 lg.basicConfig(
@@ -61,9 +62,57 @@ class UptimeMonitor:
             )
         ''')
 
+        connection.commit()
+        connection.close()
+        lg.info("Database initialized successfully")
 
+    def load_config(self):
+        try:
+            with open('config.json', 'r') as f:
+                return json.load(f)
+        except FileNotFoundError:
+            default_config = {
+                "email": {
+                    "smtp_server": "smtp.gmail.com",
+                    "smtp_port": 587,
+                    "username": "your_email@gmail.com",
+                    "password": "your_app_password",
+                    "from_email": "your_email@gmail.com",
+                    "to_emails": ["admin@example.com"]
+                },
+                "general": {
+                    "user_agent": "UptimeMonitor/1.0",
+                    "max_retries": 3,
+                    "retry_delay": 30
+                }
+            }
 
+            with open('config.json', 'w') as f:
+                json.dump(default_config, f, indent=4)
 
+            lg.info("Created default config.json - please update with your settings")
+            return default_config
+
+    def add_website(self, url, name, check_interval=300, timeout=10, expected_status=200):
+            connection = sqlite3.connect(self.db.name)
+            cursor = connection.cursor()
+
+            try:
+                cursor.execute('''
+                               INSERT INTO websites (url, name, check_interval, timeout, expected_status)
+                               VALUES (?, ?, ?, ?, ?)
+                               ''', (url, name, check_interval, timeout, expected_status))
+
+                connection.commit()
+                website_id = cursor.lastrowid
+                lg.info(f"Added website: {name} ({url})")
+                return website_id
+
+            except sqlite3.IntegrityError:
+                lg.error(f"Website {url} already exists")
+                return None
+            finally:
+                connection.close()
 
 
 def main():
