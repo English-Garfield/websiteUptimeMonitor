@@ -1,6 +1,8 @@
 import logging as lg
 import sqlite3
 import json
+import time
+import requests
 
 # Configure logging
 lg.basicConfig(
@@ -113,6 +115,42 @@ class UptimeMonitor:
                 return None
             finally:
                 connection.close()
+
+    def check_website(self, website_id, url, timeout, expected_status):
+        start_time = time.time()
+
+        try:
+            headers = {'User-Agent': self.config['general']['user_agent']}
+            response = requests.get(url, timeout=timeout, headers=headers, allow_redirects=True)
+            response_time = time.time() - start_time
+
+            is_up = response.status_code == expected_status
+            error_message = None if is_up else f"Unexpected status code: {response.status_code}"
+
+            self.log_check_result(website_id, response.status_code, response_time, is_up, error_message)
+
+            return {
+                'is_up': is_up,
+                'status_code': response.status_code,
+                'response_time': response_time,
+                'error': error_message
+            }
+
+        except requests.RequestException as e:
+            response_time = time.time() - start_time
+            error_message = str(e)
+
+            self.log_check_result(website_id, None, response_time, False, error_message)
+
+            return {
+                'is_up': False,
+                'status_code': None,
+                'response_time': response_time,
+                'error': error_message
+            }
+
+    def log_check_result(self, website_id, status_code, response_time, is_up, error_message):
+
 
 
 def main():
