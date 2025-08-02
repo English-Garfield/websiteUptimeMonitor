@@ -1,0 +1,49 @@
+2025-08-02 12:56:36,204 - root - INFO - Database initialized successfully
+2025-08-02 12:56:36,204 - root - INFO - Created default config.json - please update with your settings
+2025-08-02 12:56:41,541 - root - INFO - Database initialized successfully
+2025-08-02 12:56:41,542 - root - INFO - Added website: Google (https://google.com)
+2025-08-02 12:56:41,543 - root - INFO - Added website: GitHub (https://github.com)
+2025-08-02 12:56:41,543 - root - INFO - Added website: Stack Overflow (https://stackoverflow.com)
+2025-08-02 12:56:57,131 - root - INFO - Database initialized successfully
+2025-08-02 12:56:57,131 - root - ERROR - Website https://google.com already exists
+2025-08-02 12:56:57,131 - root - ERROR - Website https://github.com already exists
+2025-08-02 12:56:57,132 - root - ERROR - Website https://stackoverflow.com already exists
+2025-08-02 12:56:57,132 - root - INFO - Starting monitoring for 3 websites...
+2025-08-02 12:58:14,927 - root - INFO - Database initialized successfully
+2025-08-02 12:58:14,928 - root - ERROR - Website https://google.com already exists
+2025-08-02 12:58:14,928 - root - ERROR - Website https://github.com already exists
+2025-08-02 12:58:14,928 - root - ERROR - Website https://stackoverflow.com already exists
+2025-08-02 12:58:14,929 - root - INFO - Starting monitoring for 3 websites...
+2025-08-02 12:58:27,678 - root - INFO - Database initialized successfully
+2025-08-02 12:58:27,679 - root - ERROR - Website https://google.com already exists
+2025-08-02 12:58:27,679 - root - ERROR - Website https://github.com already exists
+2025-08-02 12:58:27,679 - root - ERROR - Website https://stackoverflow.com already exists
+2025-08-02 12:58:27,680 - root - INFO - Starting monitoring for 3 websites...
+2025-08-02 12:58:36,021 - root - INFO - Shutting down monitor...
+2025-08-02 12:58:36,230 - root - INFO - Database initialized successfully
+2025-08-02 12:58:36,230 - root - ERROR - Website https://google.com already exists
+2025-08-02 12:58:36,231 - root - ERROR - Website https://github.com already exists
+2025-08-02 12:58:36,231 - root - ERROR - Website https://stackoverflow.com already exists
+2025-08-02 12:58:36,231 - root - INFO - Starting monitoring for 3 websites...
+2025-08-02 12:58:36,313 - root - ERROR - Error monitoring GitHub: 'UptimeMonitor' object has no attribute 'db'
+2025-08-02 12:58:36,391 - root - ERROR - Error monitoring Google: 'UptimeMonitor' object has no attribute 'db'
+2025-08-02 12:58:36,598 - root - ERROR - Error monitoring Stack Overflow: 'UptimeMonitor' object has no attribute 'db'
+2025-08-02 12:59:36,479 - root - ERROR - Error monitoring GitHub: 'UptimeMonitor' object has no attribute 'db'
+2025-08-02 12:59:36,598 - root - ERROR - Error monitoring Google: 'UptimeMonitor' object has no attribute 'db'
+2025-08-02 12:59:37,208 - root - ERROR - Error monitoring Stack Overflow: 'UptimeMonitor' object has no attribute 'db'
+2025-08-02 13:01:08,787 - root - ERROR - Error monitoring GitHub: 'UptimeMonitor' object has no attribute 'db'
+2025-08-02 13:01:09,011 - root - ERROR - Error monitoring Google: 'UptimeMonitor' object has no attribute 'db'
+2025-08-02 13:01:09,828 - root - ERROR - Error monitoring Stack Overflow: 'UptimeMonitor' object has no attribute 'db'
+2025-08-02 13:15:26,273 - root - ERROR - Error monitoring GitHub: 'UptimeMonitor' object has no attribute 'db'
+2025-08-02 13:15:26,595 - root - ERROR - Error monitoring Google: 'UptimeMonitor' object has no attribute 'db'
+2025-08-02 13:15:27,587 - root - ERROR - Error monitoring Stack Overflow: 'UptimeMonitor' object has no attribute 'db'
+2025-08-02 13:15:39,719 - root - INFO - Shutting down monitor...
+2025-08-02 13:15:40,021 - root - INFO - Database initialized successfully
+2025-08-02 13:15:40,021 - root - ERROR - Website https://google.com already exists
+2025-08-02 13:15:40,021 - root - ERROR - Website https://github.com already exists
+2025-08-02 13:15:40,021 - root - ERROR - Website https://stackoverflow.com already exists
+2025-08-02 13:15:40,022 - root - INFO - Starting monitoring for 3 websites...
+2025-08-02 13:15:40,101 - root - ERROR - Error monitoring GitHub: 'UptimeMonitor' object has no attribute 'db'
+2025-08-02 13:15:40,180 - root - ERROR - Error monitoring Google: 'UptimeMonitor' object has no attribute 'db'
+2025-08-02 13:15:40,385 - root - ERROR - Error monitoring Stack Overflow: 'UptimeMonitor' object has no attribute 'db'
+2025-08-02 13:15:58,952 - root - INFO - Shutting down monitor...

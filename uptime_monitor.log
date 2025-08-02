@@ -1,0 +1,9 @@
+2025-08-02 13:15:59,199 - INFO - Database initialized successfully
+2025-08-02 13:15:59,200 - INFO - Added website: Google (https://google.com)
+2025-08-02 13:15:59,200 - INFO - Added website: GitHub (https://github.com)
+2025-08-02 13:15:59,201 - INFO - Added website: Stack Overflow (https://stackoverflow.com)
+2025-08-02 13:15:59,201 - INFO - Starting monitoring for 3 websites...
+2025-08-02 13:15:59,278 - INFO - ✅ GitHub is UP (Status: 200, Time: 0.08s)
+2025-08-02 13:15:59,352 - INFO - ✅ Google is UP (Status: 200, Time: 0.15s)
+2025-08-02 13:15:59,564 - INFO - ✅ Stack Overflow is UP (Status: 200, Time: 0.36s)
+2025-08-02 13:16:19,007 - INFO - Shutting down monitor...
