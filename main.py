@@ -268,6 +268,79 @@ class UptimeMonitor:
         connection.commit()
         connection.close()
 
+    def get_websites(self):
+        connections = sqlite3.connect(self.db_name)
+        cursor = connections.cursor()
+
+        cursor.execute('''
+                       SELECT id, url, name, check_interval, timeout, expected_status
+                       FROM websites
+                       WHERE active = 1
+                       ''')
+
+        websites = cursor.fetchall()
+        connections.close()
+
+        return websites
+
+    def get_uptime_status(self, website_id, days=7):
+        connection = sqlite3.connect(self.db_name)
+        cursor = connection.cursor()
+
+        cutoff_date = datetime.now() - timedelta(days=days)
+
+        # Get total checks and successful checks
+        cursor.execute('''
+                       SELECT COUNT(*)                                   as total_checks,
+                              SUM(CASE WHEN is_up = 1 THEN 1 ELSE 0 END) as successful_checks,
+                              AVG(response_time)                         as avg_response_time,
+                              MIN(checked_at)                            as first_check,
+                              MAX(checked_at)                            as last_check
+                       FROM uptime_checks
+                       WHERE website_id = ?
+                         AND checked_at > ?
+                       ''', (website_id, cutoff_date))
+
+        stats = cursor.fetchone()
+        connection.close()
+
+        if stats[0] == 0:  # No checks found
+            return None
+
+        uptime_percentage = (stats[1] / stats[0]) * 100 if stats[0] > 0 else 0
+
+        return {
+            'total_checks': stats[0],
+            'successful_checks': stats[1],
+            'uptime_percentage': round(uptime_percentage, 2),
+            'avg_response_time': round(stats[2], 2) if stats[2] else 0,
+            'first_check': stats[3],
+            'last_check': stats[4]
+        }
+
+    def start_monitoring(self):
+        """Start monitoring all websites"""
+        websites = self.get_websites()
+
+        if not websites:
+            lg.warning("No websites to monitor. Add some websites first.")
+            return
+
+        lg.info(f"Starting monitoring for {len(websites)} websites...")
+
+        threads = []
+        for website in websites:
+            thread = threading.Thread(target=self.monitor_website, args=(website,))
+            thread.daemon = True
+            thread.start()
+            threads.append(thread)
+
+        try:
+            # Keep main thread alive
+            while True:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            lg.info("Shutting down monitor...")
 
 
 def main():
