@@ -254,6 +254,20 @@ class UptimeMonitor:
         connection.commit()
         connection.close()
 
+    def resolve_downtime_alert(self, website_id):
+        connection = sqlite3.connect(self.db_name)
+        cursor = connection.cursor()
+
+        cursor.execute('''
+                       UPDATE downtime_alerts
+                       SET resolved_at = CURRENT_TIMESTAMP
+                       WHERE website_id = ?
+                         AND resolved_at IS NULL
+                       ''', (website_id,))
+
+        connection.commit()
+        connection.close()
+
 
 
 def main():
