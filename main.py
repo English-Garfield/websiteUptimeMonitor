@@ -209,6 +209,51 @@ class UptimeMonitor:
             lg.error(f"Failed to send email alert: {e}")
             return False
 
+    def check_and_alert(self, website_id, url, name, timeout, expected_status):
+        result = self.check_website(website_id, url, timeout, expected_status)
+
+        if result['is_up']:
+            lg.info(f"{name} is UP (Status: {result['status_code']}, Time: {result['response_time']:.2f}s)")
+            self.resolve_downtime_alert(website_id)
+        else:
+            lg.warning(f"{name} is DOWN - {result['error']}")
+
+            # Check if we already sent an alert recently (avoid spam)
+            if not self.recent_alert_sent(website_id):
+                self.send_alert_email(name, url, result['error'])
+                self.record_downtime_alert(website_id)
+
+    def recent_alert_sent(self, website_id, hours=1):
+        connection = sqlite3.connect(self.db_name)
+        cursor = connection.cursor()
+
+        cutoff_time = datetime.now() - timedelta(hours=hours)
+
+        cursor.execute('''
+                       SELECT COUNT(*)
+                       FROM downtime_alerts
+                       WHERE website_id = ?
+                         AND alert_sent_at > ?
+                         AND resolved_at IS NULL
+                       ''', (website_id, cutoff_time))
+
+        count = cursor.fetchone()[0]
+        connection.close()
+
+        return count > 0
+
+    def record_downtime_alert(self, website_id):
+        connection = sqlite3.connect(self.db_name)
+        cursor = connection.cursor()
+
+        cursor.execute('''
+                       INSERT INTO downtime_alerts (website_id)
+                       VALUES (?)
+                       ''', (website_id,))
+
+        connection.commit()
+        connection.close()
+
 
 
 def main():
