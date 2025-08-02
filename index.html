@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uptime Monitor - Modern Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            color: #6c7b7f;
+            font-weight: 400;
+            margin-bottom: 30px;
+        }
+
+        .last-updated {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #e1e8ed;
+            padding: 12px 24px;
+            border-radius: 8px;
+            display: inline-block;
+            font-size: 0.9rem;
+            color: #657786;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid #e1e8ed;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #3b82f6;
+        }
+
+        .stat-label {
+            color: #6b7280;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .main-section {
+            background: white;
+            border: 1px solid #e1e8ed;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .section-title {
+            font-size: 2rem;
+            color: #1f2937;
+            font-weight: 700;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .refresh-btn, .export-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .refresh-btn:hover, .export-btn:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+
+        .search-box {
+            padding: 12px 16px;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            outline: none;
+            color: #374151;
+            transition: all 0.2s ease;
+            min-width: 250px;
+        }
+
+        .search-box::placeholder {
+            color: #9ca3af;
+        }
+
+        .search-box:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .websites-grid {
+            display: grid;
+            gap: 30px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .website-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 30px;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .website-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: #10b981;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .website-card.down::before {
+            background: #ef4444;
+        }
+
+        .website-card.warning::before {
+            background: #f59e0b;
+        }
+
+        .website-card.unknown::before {
+            background: #6b7280;
+        }
+
+        .website-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.12);
+        }
+
+        .website-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .website-info {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .website-name {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .website-url {
+            color: #3b82f6;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: color 0.2s ease;
+            word-break: break-all;
+        }
+
+        .website-url:hover {
+            color: #2563eb;
+        }
+
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-up {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-down {
+            background: #fecaca;
+            color: #991b1b;
+        }
+
+        .status-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-unknown {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .website-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .metric {
+            text-align: center;
+            padding: 20px;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .metric:hover {
+            background: #f3f4f6;
+            transform: translateY(-1px);
+        }
+
+        .metric-icon {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .metric-value {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+
+        .metric-label {
+            font-size: 0.8rem;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 500;
+        }
+
+        .error-message {
+            margin-top: 20px;
+            padding: 16px 20px;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            color: #991b1b;
+            font-size: 0.9rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: #6b7280;
+            font-size: 1.1rem;
+        }
+
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #3b82f6;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 60px;
+            color: #6b7280;
+            font-size: 1.1rem;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            color: #9ca3af;
+            font-size: 0.9rem;
+        }
+
+        .footer a {
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .footer a:hover {
+            color: #2563eb;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .container {
+                padding: 15px;
+            }
+
+            .header h1 {
+                font-size: 3rem;
+            }
+
+            .main-section {
+                padding: 35px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.5rem;
+            }
+
+            .section-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .controls {
+                justify-content: center;
+            }
+
+            .website-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .website-metrics {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .search-box {
+                min-width: auto;
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .website-metrics {
+                grid-template-columns: 1fr;
+            }
+
+            .main-section {
+                padding: 25px;
+                border-radius: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Remove particles div -->
+
+    <div class="container">
+        <div class="header">
+            <h1>📊 Website Monitor</h1>
+            <p>Professional website monitoring dashboard</p>
+            <div class="last-updated" id="last-updated">
+                Last updated: Loading...
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">🌍</div>
+                <div class="stat-number" id="total-websites">-</div>
+                <div class="stat-label">Total Websites</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-number" id="websites-up">-</div>
+                <div class="stat-label">Online</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">❌</div>
+                <div class="stat-number" id="websites-down">-</div>
+                <div class="stat-label">Offline</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📈</div>
+                <div class="stat-number" id="avg-uptime">-</div>
+                <div class="stat-label">Average Uptime</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">⚡</div>
+                <div class="stat-number" id="avg-response">-</div>
+                <div class="stat-label">Avg Response Time</div>
+            </div>
+        </div>
+
+        <div class="main-section">
+            <div class="section-header">
+                <h2 class="section-title">Monitored Websites</h2>
+                <div class="controls">
+                    <input type="text" class="search-box" id="search-box" placeholder="🔍 Search services...">
+                    <button class="refresh-btn" onclick="loadWebsiteData()">🔄 Refresh</button>
+                    <button class="export-btn" onclick="exportData()">📊 Export</button>
+                </div>
+            </div>
+
+            <div id="websites-container" class="websites-grid">
+                <div class="loading">Loading website data...</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Powered by <a href="https://github.com" target="_blank">Website Monitor</a> |
+            Auto-refreshes every 30 seconds</p>
+        </div>
+    </div>
+
+    <script>
+        // Remove createParticles function since we don't need it anymore
+
+        // Configuration - Update these URLs to match your setup
+        const CONFIG = {
+            // For local development, use your Flask server
+            apiBaseUrl: 'http://localhost:5000/api',
+
+            // For production, you might use a different API endpoint
+            // apiBaseUrl: 'https://your-api-server.com/api',
+
+            // Or for static demo data, use the demo function below
+            useDemoData: true,
+
+            refreshInterval: 30000, // 30 seconds
+            searchDelay: 300 // 300ms delay for search
+        };
+
+        let websites = [];
+        let filteredWebsites = [];
+        let searchTimeout;
+
+        // Demo data for GitHub Pages deployment
+        function getDemoData() {
+            return [
+                {
+                    id: 1,
+                    name: 'Google Search',
+                    url: 'https://google.com',
+                    status: 'up',
+                    status_code: 200,
+                    response_time: 0.15,
+                    uptime_percentage: 99.9,
+                    total_checks: 1440,
+                    last_checked: new Date().toISOString(),
+                    error_message: null
+                },
+                {
+                    id: 2,
+                    name: 'GitHub Platform',
+                    url: 'https://github.com',
+                    status: 'up',
+                    status_code: 200,
+                    response_time: 0.34,
+                    uptime_percentage: 99.8,
+                    total_checks: 1438,
+                    last_checked: new Date().toISOString(),
+                    error_message: null
+                },
+                {
+                    id: 3,
+                    name: 'Stack Overflow',
+                    url: 'https://stackoverflow.com',
+                    status: 'warning',
+                    status_code: 503,
+                    response_time: 2.1,
+                    uptime_percentage: 89.5,
+                    total_checks: 1400,
+                    last_checked: new Date().toISOString(),
+                    error_message: 'Service temporarily unavailable - high load detected'
+                },
+                {
+                    id: 4,
+                    name: 'CloudFlare CDN',
+                    url: 'https://cloudflare.com',
+                    status: 'up',
+                    status_code: 200,
+                    response_time: 0.08,
+                    uptime_percentage: 99.95,
+                    total_checks: 2880,
+                    last_checked: new Date().toISOString(),
+                    error_message: null
+                }
+            ];
+        }
+
+        async function loadWebsiteData() {
+            try {
+                if (CONFIG.useDemoData) {
+                    // Use demo data for GitHub Pages
+                    websites = getDemoData();
+                    processWebsiteData();
+                } else {
+                    // Use real API
+                    const response = await fetch(`${CONFIG.apiBaseUrl}/websites`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    websites = await response.json();
+                    processWebsiteData();
+                }
+            } catch (error) {
+                console.error('Error loading website data:', error);
+                handleLoadError(error);
+            }
+        }
+
+        function processWebsiteData() {
+            filteredWebsites = [...websites];
+            renderWebsites();
+            updateStats();
+            updateLastUpdated();
+        }
+
+        function handleLoadError(error) {
+            const container = document.getElementById('websites-container');
+            container.innerHTML = `
+                <div class="no-data">
+                    <h3>Unable to load website data</h3>
+                    <p>Error: ${error.message}</p>
+                    <p>If you're viewing this demo, the sample data should work.</p>
+                    <p>For live monitoring, ensure your API server is running.</p>
+                    <button class="refresh-btn" onclick="loadWebsiteData()" style="margin-top: 20px;">
+                        Try Again
+                    </button>
+                </div>
+            `;
+        }
+
+        function renderWebsites() {
+            const container = document.getElementById('websites-container');
+
+            if (filteredWebsites.length === 0) {
+                if (websites.length === 0) {
+                    container.innerHTML = '<div class="no-data">No websites are being monitored yet.</div>';
+                } else {
+                    container.innerHTML = '<div class="no-data">No websites match your search criteria.</div>';
+                }
+                return;
+            }
+
+            container.innerHTML = filteredWebsites.map(website => `
+                <div class="website-card ${website.status}">
+                    <div class="website-header">
+                        <div class="website-info">
+                            <div class="website-name">${escapeHtml(website.name)}</div>
+                            <a href="${escapeHtml(website.url)}" target="_blank" class="website-url">
+                                ${escapeHtml(website.url)}
+                            </a>
+                        </div>
+                        <div class="status-badge status-${website.status}">
+                            ${getStatusText(website.status)} ${getStatusIcon(website.status)}
+                        </div>
+                    </div>
+
+                    <div class="website-metrics">
+                        <div class="metric">
+                            <div class="metric-icon">📈</div>
+                            <div class="metric-value">${website.uptime_percentage || 0}%</div>
+                            <div class="metric-label">Uptime</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-icon">⚡</div>
+                            <div class="metric-value">${formatResponseTime(website.response_time)}</div>
+                            <div class="metric-label">Response</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-icon">🔢</div>
+                            <div class="metric-value">${website.status_code || 0}</div>
+                            <div class="metric-label">Status Code</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-icon">📊</div>
+                            <div class="metric-value">${website.total_checks || 0}</div>
+                            <div class="metric-label">Checks</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-icon">🕒</div>
+                            <div class="metric-value">${formatLastChecked(website.last_checked)}</div>
+                            <div class="metric-label">Last Check</div>
+                        </div>
+                    </div>
+
+                    ${website.error_message ? `
+                        <div class="error-message">
+                            <strong>Error Details:</strong> ${escapeHtml(website.error_message)}
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+        function updateStats() {
+            const totalWebsites = websites.length;
+            const websitesUp = websites.filter(w => w.status === 'up').length;
+            const websitesDown = websites.filter(w => w.status === 'down').length;
+            const avgUptime = totalWebsites > 0 ?
+                (websites.reduce((sum, w) => sum + (w.uptime_percentage || 0), 0) / totalWebsites).toFixed(1) : 0;
+            const avgResponse = totalWebsites > 0 ?
+                (websites.reduce((sum, w) => sum + (w.response_time || 0), 0) / totalWebsites).toFixed(2) : 0;
+
+            document.getElementById('total-websites').textContent = totalWebsites;
+            document.getElementById('websites-up').textContent = websitesUp;
+            document.getElementById('websites-down').textContent = websitesDown;
+            document.getElementById('avg-uptime').textContent = avgUptime + '%';
+            document.getElementById('avg-response').textContent = avgResponse + 's';
+        }
+
+        function updateLastUpdated() {
+            const now = new Date();
+            document.getElementById('last-updated').textContent =
+                `Last updated: ${now.toLocaleTimeString()}`;
+        }
+
+        function getStatusText(status) {
+            const statusMap = {
+                'up': 'Online',
+                'down': 'Offline',
+                'warning': 'Warning',
+                'unknown': 'Unknown'
+            };
+            return statusMap[status] || 'Unknown';
+        }
+
+        function getStatusIcon(status) {
+            const iconMap = {
+                'up': '✅',
+                'down': '❌',
+                'warning': '⚠️',
+                'unknown': '❓'
+            };
+            return iconMap[status] || '❓';
+        }
+
+        function formatResponseTime(time) {
+            if (!time) return '0s';
+            return time < 1 ? `${Math.round(time * 1000)}ms` : `${time.toFixed(2)}s`;
+        }
+
+        function formatLastChecked(timestamp) {
+            if (!timestamp) return 'Never';
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diff = now - date;
+
+            if (diff < 60000) return 'Just now';
+            if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+            if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+            return `${Math.floor(diff / 86400000)}d ago`;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function filterWebsites(searchTerm) {
+            const term = searchTerm.toLowerCase();
+            filteredWebsites = websites.filter(website =>
+                website.name.toLowerCase().includes(term) ||
+                website.url.toLowerCase().includes(term) ||
+                website.status.toLowerCase().includes(term)
+            );
+            renderWebsites();
+        }
+
+        function exportData() {
+            const data = {
+                exported_at: new Date().toISOString(),
+                total_websites: websites.length,
+                summary: {
+                    online: websites.filter(w => w.status === 'up').length,
+                    offline: websites.filter(w => w.status === 'down').length,
+                    warning: websites.filter(w => w.status === 'warning').length,
+                    unknown: websites.filter(w => w.status === 'unknown').length
+                },
+                websites: websites
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `status-report-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Event Listeners
+        document.getElementById('search-box').addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                filterWebsites(e.target.value);
+            }, CONFIG.searchDelay);
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadWebsiteData();
+        });
+
+        // Auto-refresh
+        setInterval(loadWebsiteData, CONFIG.refreshInterval);
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case 'r':
+                        e.preventDefault();
+                        loadWebsiteData();
+                        break;
+                    case 'f':
+                        e.preventDefault();
+                        document.getElementById('search-box').focus();
+                        break;
+                    case 'e':
+                        e.preventDefault();
+                        exportData();
+                        break;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
