@@ -342,6 +342,29 @@ class UptimeMonitor:
         except KeyboardInterrupt:
             lg.info("Shutting down monitor...")
 
+    def print_dashboard(self):
+        websites = self.get_websites()
+
+        print("\n" + "=" * 60)
+        print("WEBSITE UPTIME DASHBOARD")
+        print("=" * 60)
+
+        for website in websites:
+            website_id, url, name, check_interval, timeout, expected_status = website
+            stats = self.get_uptime_stats(website_id)
+
+            if stats:
+                print(f"\n {name}")
+                print(f"   URL: {url}")
+                print(f"   Uptime: {stats['uptime_percentage']}% (last 7 days)")
+                print(f"   Avg Response: {stats['avg_response_time']}s")
+                print(f"   Total Checks: {stats['total_checks']}")
+            else:
+                print(f"\n {name}")
+                print(f"   URL: {url}")
+                print(f"   Status: No data yet")
+
+        print("\n" + "=" * 60)
 
 def main():
     pass
