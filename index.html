@@ -493,7 +493,14 @@
 
     <script>
         const CONFIG = {
+            // Change this URL to match your API server
             apiBaseUrl: 'http://localhost:5000/api',
+            
+            // Alternative common configurations:
+            // apiBaseUrl: 'http://localhost:3000/api',
+            // apiBaseUrl: 'http://localhost:8000/api',
+            // apiBaseUrl: 'https://your-domain.com/api',
+            
             refreshInterval: 30000, // 30 seconds
             searchDelay: 300 // 300ms delay for search
         };
@@ -504,15 +511,35 @@
 
         async function loadWebsiteData() {
             try {
-                const response = await fetch(`${CONFIG.apiBaseUrl}/websites`);
+                console.log('Attempting to fetch from:', `${CONFIG.apiBaseUrl}/websites`);
+                
+                const response = await fetch(`${CONFIG.apiBaseUrl}/websites`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    mode: 'cors' // Explicitly set CORS mode
+                });
+                
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
+                
                 websites = await response.json();
+                console.log('Successfully loaded', websites.length, 'websites');
                 processWebsiteData();
+                
             } catch (error) {
                 console.error('Error loading website data:', error);
-                handleLoadError(error);
+                
+                // Provide more specific error information
+                let errorMessage = error.message;
+                if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+                    errorMessage = 'Connection failed - API server may not be running or CORS not configured';
+                }
+                
+                handleLoadError({ ...error, message: errorMessage });
             }
         }
 
@@ -525,13 +552,38 @@
 
         function handleLoadError(error) {
             const container = document.getElementById('websites-container');
+            
+            let troubleshootingTips = '';
+            if (error.message.includes('Failed to fetch') || error.message.includes('Connection failed')) {
+                troubleshootingTips = `
+                    <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; text-align: left;">
+                        <h4>Troubleshooting Steps:</h4>
+                        <ol style="margin: 10px 0; padding-left: 20px;">
+                            <li>Check if your API server is running at <code>${CONFIG.apiBaseUrl}</code></li>
+                            <li>Verify the server has CORS headers configured:
+                                <ul style="margin: 5px 0;">
+                                    <li><code>Access-Control-Allow-Origin: *</code> (or your domain)</li>
+                                    <li><code>Access-Control-Allow-Methods: GET, POST, OPTIONS</code></li>
+                                </ul>
+                            </li>
+                            <li>Try accessing <a href="${CONFIG.apiBaseUrl}/websites" target="_blank">${CONFIG.apiBaseUrl}/websites</a> directly in your browser</li>
+                            <li>Check the browser console (F12) for more detailed error messages</li>
+                        </ol>
+                    </div>
+                `;
+            }
+            
             container.innerHTML = `
                 <div class="no-data">
                     <h3>Unable to load website data</h3>
-                    <p>Error: ${error.message}</p>
-                    <p>Please ensure your API server is running at ${CONFIG.apiBaseUrl}</p>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                    <p>API Endpoint: <code>${CONFIG.apiBaseUrl}/websites</code></p>
+                    ${troubleshootingTips}
                     <button class="refresh-btn" onclick="loadWebsiteData()" style="margin-top: 20px;">
-                        Try Again
+                        🔄 Try Again
+                    </button>
+                    <button class="refresh-btn" onclick="testConnection()" style="margin-top: 20px; margin-left: 10px; background: #10b981;">
+                        🔍 Test Connection
                     </button>
                 </div>
             `;
@@ -697,6 +749,78 @@
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
+        }
+
+        // Test connection function for debugging
+        async function testConnection() {
+            const container = document.getElementById('websites-container');
+            container.innerHTML = '<div class="loading">Testing connection...</div>';
+            
+            try {
+                console.log('Testing connection to:', CONFIG.apiBaseUrl);
+                
+                // First test if the server responds at all
+                const response = await fetch(`${CONFIG.apiBaseUrl}/websites`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                    },
+                    mode: 'cors'
+                });
+                
+                const contentType = response.headers.get('content-type');
+                const corsHeader = response.headers.get('access-control-allow-origin');
+                
+                let result = `
+                    <div class="no-data">
+                        <h3>Connection Test Results</h3>
+                        <div style="text-align: left; background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                            <p><strong>Status:</strong> ${response.status} ${response.statusText}</p>
+                            <p><strong>Content-Type:</strong> ${contentType || 'Not set'}</p>
+                            <p><strong>CORS Header:</strong> ${corsHeader || 'Not set'}</p>
+                            <p><strong>Response OK:</strong> ${response.ok ? '✅ Yes' : '❌ No'}</p>
+                        </div>
+                `;
+                
+                if (response.ok) {
+                    try {
+                        const data = await response.json();
+                        result += `<p style="color: green;">✅ Successfully received JSON data with ${Array.isArray(data) ? data.length : 'unknown'} items</p>`;
+                    } catch (jsonError) {
+                        result += `<p style="color: orange;">⚠️ Server responded but returned invalid JSON: ${jsonError.message}</p>`;
+                    }
+                } else {
+                    result += `<p style="color: red;">❌ Server returned error status: ${response.status}</p>`;
+                }
+                
+                result += `
+                        <button class="refresh-btn" onclick="loadWebsiteData()" style="margin-top: 20px;">
+                            🔄 Try Loading Data Again
+                        </button>
+                    </div>
+                `;
+                
+                container.innerHTML = result;
+                
+            } catch (error) {
+                container.innerHTML = `
+                    <div class="no-data">
+                        <h3>Connection Test Failed</h3>
+                        <div style="text-align: left; background: #fef2f2; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                            <p><strong>Error Type:</strong> ${error.name}</p>
+                            <p><strong>Error Message:</strong> ${error.message}</p>
+                            <p><strong>Likely Cause:</strong> ${
+                                error.message.includes('Failed to fetch') 
+                                    ? 'API server is not running or CORS is not configured'
+                                    : 'Network or configuration issue'
+                            }</p>
+                        </div>
+                        <button class="refresh-btn" onclick="loadWebsiteData()" style="margin-top: 20px;">
+                            🔄 Try Again
+                        </button>
+                    </div>
+                `;
+            }
         }
 
         // Event Listeners
