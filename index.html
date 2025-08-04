@@ -368,6 +368,10 @@
             color: #2563eb;
         }
 
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
         /* Responsive Design */
         @media (max-width: 1024px) {
             .container {
@@ -429,8 +433,6 @@
     </style>
 </head>
 <body>
-    <!-- Remove particles div -->
-
     <div class="container">
         <div class="header">
             <h1>Website Monitor</h1>
@@ -492,9 +494,6 @@
     <script>
         const CONFIG = {
             apiBaseUrl: 'http://localhost:5000/api',
-
-            useDemoData: false,
-
             refreshInterval: 30000, // 30 seconds
             searchDelay: 300 // 300ms delay for search
         };
@@ -503,73 +502,14 @@
         let filteredWebsites = [];
         let searchTimeout;
 
-        // Demo data for GitHub Pages deployment
-        function getDemoData() {
-            return [
-                {
-                    id: 1,
-                    name: 'Google Search',
-                    url: 'https://google.com',
-                    status: 'up',
-                    status_code: 200,
-                    response_time: 0.15,
-                    uptime_percentage: 99.9,
-                    total_checks: 1440,
-                    last_checked: new Date().toISOString(),
-                    error_message: null
-                },
-                {
-                    id: 2,
-                    name: 'GitHub Platform',
-                    url: 'https://github.com',
-                    status: 'up',
-                    status_code: 200,
-                    response_time: 0.34,
-                    uptime_percentage: 99.8,
-                    total_checks: 1438,
-                    last_checked: new Date().toISOString(),
-                    error_message: null
-                },
-                {
-                    id: 3,
-                    name: 'Stack Overflow',
-                    url: 'https://stackoverflow.com',
-                    status: 'warning',
-                    status_code: 503,
-                    response_time: 2.1,
-                    uptime_percentage: 89.5,
-                    total_checks: 1400,
-                    last_checked: new Date().toISOString(),
-                    error_message: 'Service temporarily unavailable - high load detected'
-                },
-                {
-                    id: 4,
-                    name: 'CloudFlare CDN',
-                    url: 'https://cloudflare.com',
-                    status: 'up',
-                    status_code: 200,
-                    response_time: 0.08,
-                    uptime_percentage: 99.95,
-                    total_checks: 2880,
-                    last_checked: new Date().toISOString(),
-                    error_message: null
-                }
-            ];
-        }
-
         async function loadWebsiteData() {
             try {
-                if (CONFIG.useDemoData) {
-                    websites = getDemoData();
-                    processWebsiteData();
-                } else {
-                    const response = await fetch(`${CONFIG.apiBaseUrl}/websites`);
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    websites = await response.json();
-                    processWebsiteData();
+                const response = await fetch(`${CONFIG.apiBaseUrl}/websites`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
+                websites = await response.json();
+                processWebsiteData();
             } catch (error) {
                 console.error('Error loading website data:', error);
                 handleLoadError(error);
@@ -589,8 +529,7 @@
                 <div class="no-data">
                     <h3>Unable to load website data</h3>
                     <p>Error: ${error.message}</p>
-                    <p>If you're viewing this demo, the sample data should work.</p>
-                    <p>For live monitoring, ensure your API server is running.</p>
+                    <p>Please ensure your API server is running at ${CONFIG.apiBaseUrl}</p>
                     <button class="refresh-btn" onclick="loadWebsiteData()" style="margin-top: 20px;">
                         Try Again
                     </button>
