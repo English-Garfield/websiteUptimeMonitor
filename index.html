@@ -484,23 +484,15 @@
         </div>
 
         <div class="footer">
-            <p>Powered by <a href="https://github.com" target="_blank">Website Monitor</a> |
+            <p>Powered by <a href="https://github.com/English-Garfield/websiteUptimeMonitor" target="_blank">Website Monitor</a> |
             Auto-refreshes every 30 seconds</p>
         </div>
     </div>
 
     <script>
-        // Remove createParticles function since we don't need it anymore
-
-        // Configuration - Update these URLs to match your setup
         const CONFIG = {
-            // For local development, use your Flask server
             apiBaseUrl: 'http://localhost:5000/api',
 
-            // For production, you might use a different API endpoint
-            // apiBaseUrl: 'https://your-api-server.com/api',
-
-            // Or for static demo data, use the demo function below
             useDemoData: true,
 
             refreshInterval: 30000, // 30 seconds
@@ -568,11 +560,9 @@
         async function loadWebsiteData() {
             try {
                 if (CONFIG.useDemoData) {
-                    // Use demo data for GitHub Pages
                     websites = getDemoData();
                     processWebsiteData();
                 } else {
-                    // Use real API
                     const response = await fetch(`${CONFIG.apiBaseUrl}/websites`);
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);
