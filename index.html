@@ -493,17 +493,114 @@
 
     <script>
         const CONFIG = {
-            // Change this URL to match your API server
-            apiBaseUrl: 'http://localhost:5000/api',
+            // Set to false to use live API data
+            useDemoData: false,
             
-            // Alternative common configurations:
-            // apiBaseUrl: 'http://localhost:3000/api',
-            // apiBaseUrl: 'http://localhost:8000/api',
-            // apiBaseUrl: 'https://your-domain.com/api',
+            // Replace with your deployed backend URL
+            apiBaseUrl: 'https://your-app-name.railway.app/api',
+            
+            // Fallback to demo data if API fails (for GitHub Pages reliability)
+            fallbackToDemo: true,
             
             refreshInterval: 30000, // 30 seconds
             searchDelay: 300 // 300ms delay for search
         };
+
+        // Client-side website checking (limited by CORS)
+        async function checkWebsiteClientSide(website) {
+            const startTime = Date.now();
+            
+            try {
+                // Use a CORS proxy service for basic connectivity testing
+                const proxyUrl = 'https://api.allorigins.win/raw?url=';
+                const response = await fetch(proxyUrl + encodeURIComponent(website.url), {
+                    method: 'GET',
+                    timeout: 10000
+                });
+                
+                const responseTime = (Date.now() - startTime) / 1000;
+                const isSuccess = response.ok;
+                
+                return {
+                    ...website,
+                    status: isSuccess ? 'up' : 'warning',
+                    status_code: response.status,
+                    response_time: responseTime,
+                    uptime_percentage: isSuccess ? 99.5 : 75.0,
+                    total_checks: Math.floor(Math.random() * 500) + 50,
+                    last_checked: new Date().toISOString(),
+                    error_message: isSuccess ? null : `HTTP ${response.status}`
+                };
+                
+            } catch (error) {
+                const responseTime = (Date.now() - startTime) / 1000;
+                
+                return {
+                    ...website,
+                    status: 'down',
+                    status_code: null,
+                    response_time: responseTime > 10 ? 10 : responseTime,
+                    uptime_percentage: 25.0,
+                    total_checks: Math.floor(Math.random() * 500) + 50,
+                    last_checked: new Date().toISOString(),
+                    error_message: 'Connection failed or CORS blocked'
+                };
+            }
+        }
+
+        // Enhanced demo data with client-side checking
+        function getDemoData() {
+            return [
+                {
+                    id: 1,
+                    name: 'Google Search',
+                    url: 'https://google.com',
+                    status: 'up',
+                    status_code: 200,
+                    response_time: 0.15,
+                    uptime_percentage: 99.9,
+                    total_checks: 1440,
+                    last_checked: new Date().toISOString(),
+                    error_message: null
+                },
+                {
+                    id: 2,
+                    name: 'GitHub Platform',
+                    url: 'https://github.com',
+                    status: 'up',
+                    status_code: 200,
+                    response_time: 0.34,
+                    uptime_percentage: 99.8,
+                    total_checks: 1438,
+                    last_checked: new Date().toISOString(),
+                    error_message: null
+                },
+                {
+                    id: 3,
+                    name: 'Stack Overflow',
+                    url: 'https://stackoverflow.com',
+                    status: 'warning',
+                    status_code: 503,
+                    response_time: 2.1,
+                    uptime_percentage: 89.5,
+                    total_checks: 1400,
+                    last_checked: new Date().toISOString(),
+                    error_message: 'Service temporarily unavailable - high load detected'
+                },
+                {
+                    id: 4,
+                    name: 'CloudFlare CDN',
+                    url: 'https://cloudflare.com',
+                    status: 'up',
+                    status_code: 200,
+                    response_time: 0.08,
+                    uptime_percentage: 99.95,
+                    total_checks: 2880,
+                    last_checked: new Date().toISOString(),
+                    error_message: null
+                }
+            ];
+        }
 
         let websites = [];
         let filteredWebsites = [];
@@ -511,6 +608,13 @@
 
         async function loadWebsiteData() {
             try {
+                if (CONFIG.useDemoData) {
+                    // Use demo data
+                    websites = getDemoData();
+                    processWebsiteData();
+                    return;
+                }
+                
                 console.log('Attempting to fetch from:', `${CONFIG.apiBaseUrl}/websites`);
                 
                 const response = await fetch(`${CONFIG.apiBaseUrl}/websites`, {
@@ -527,11 +631,33 @@
                 }
                 
                 websites = await response.json();
-                console.log('Successfully loaded', websites.length, 'websites');
+                console.log('Successfully loaded', websites.length, 'websites from live API');
                 processWebsiteData();
                 
             } catch (error) {
                 console.error('Error loading website data:', error);
+                
+                // Fallback to demo data for GitHub Pages reliability
+                if (CONFIG.fallbackToDemo) {
+                    console.log('Falling back to demo data...');
+                    websites = getDemoData();
+                    processWebsiteData();
+                    
+                    // Show a notice that we're using fallback data
+                    const container = document.getElementById('websites-container');
+                    const fallbackNotice = document.createElement('div');
+                    fallbackNotice.innerHTML = `
+                        <div style="background: #fef3c7; border: 1px solid #f59e0b; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+                            <strong>⚠️ Using Demo Data</strong><br>
+                            Live API temporarily unavailable. Showing sample data.
+                            <button onclick="loadWebsiteData()" style="margin-left: 10px; padding: 5px 10px; background: #f59e0b; color: white; border: none; border-radius: 4px;">
+                                Retry Live Data
+                            </button>
+                        </div>
+                    `;
+                    container.insertBefore(fallbackNotice, container.firstChild);
+                    return;
+                }
                 
                 // Provide more specific error information
                 let errorMessage = error.message;
